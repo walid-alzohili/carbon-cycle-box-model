@@ -1,0 +1,81 @@
+
+# --- macOS SYSTEM FILES ---
+.DS_Store
+# Folder icons
+Icon?
+
+
+# --- Windows SYSTEM FILES ---			
+Thumbs.db
+
+# --- macOS/Linux binaries and shared libraries --- 
+*.bin
+*.out
+*.app
+*.so
+*.dylib
+
+
+# --- PYTHON RELATED ---
+venv/
+env/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+*.py[oc]
+wheels/
+*.egg-info
+
+
+# --- IDEs ---
+.vscode/
+.idea/
+
+
+# --- Build folders ---
+build/
+out/
+
+
+# --- Environment files ---
+.env 
+.venv 
+.secrets
+*.runtimeconfig.json
+
+
+# --- General Binary files ---
+*.pdf
+*.pages
+*.zip
+
+# Ignore database and data files 
+*.db
+*.sqlite
+*.sqlite3
+*.csv
+
+
+# --- Windows executables --- 
+*.exe
+*.msi
+*.com
+*.scr
+
+
+# --- Latex ---
+# Note: Make sure generated files exist in 'build' folder which is already ignored.
+*.synctex.gz
+
+
+# --- Assets: ignores asset folders containing images binaries or so. ---
+# Ignore any folder ending with '__assets'
+*__assets/
+# any folder named 'assets'
+assets/
+
+
+# --- Latex: excluding source code. --- #
+# note: make sure your latex folder ends with '__latex'
+# ignore content of any folder ending with '__latex'.
+*__latex/
