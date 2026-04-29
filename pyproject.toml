@@ -56,6 +56,9 @@ dev = [
         # Ignore D400 (First line should end with a period) because it conflicts with 
         # D415 (First line should end with a period, question mark, or exclamation point) 
         "D400",
+
+        # Missing docstring in __init__
+        "D107",
     ]
 
     [tool.ruff.format]
