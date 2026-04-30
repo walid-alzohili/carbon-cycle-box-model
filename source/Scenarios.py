@@ -54,15 +54,19 @@ class Scenarios:
         # linearly decreasing co2 emissions to reach 0 by 2050.
         scenario_2_part_1 = np.linspace(self.historic_co2_excluding_luc[-1], -10, 2090 - 2021)
 
-        # sabelize at -10 after 2090.
+        """sabelize at -10 after 2090."""
         mean = -10
-        # 10% below the mean
-        range_min = mean * 0.9
-        # 10% above the mean
-        range_max = mean * 1.1
-        scenario_2_part_2 = self.rng.uniform(low=range_min, high=range_max, size=2100 - 2090)
+        # Calculate 10% of the absolute magnitude
+        offset = abs(mean) * 0.1  # result is 1.0
 
-        # values from 1750 to 2100.
+        # -10 minus 1 is -11 (The actual "low" value)
+        range_min = mean - offset
+        # -10 plus 1 is -9 (The actual "high" value)
+        range_max = mean + offset
+
+        scenario_2_part_2 = self.rng.uniform(low=range_min, high=range_max, size=10)
+
+        """values from 1750 to 2100."""
         co2_excluding_luc = np.append(
             np.append(self.historic_co2_excluding_luc, scenario_2_part_1),
             scenario_2_part_2,
