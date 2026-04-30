@@ -12,7 +12,6 @@ import numpy as np
 import scipy.integrate as integrate
 
 if TYPE_CHECKING:
-    # This import ONLY happens for the linter, not at runtime
     from scipy.integrate._ivp.ivp import OdeResult
 
 # preindustrial transfer coefficients.
