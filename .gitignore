@@ -31,8 +31,11 @@ wheels/
 # --- IDEs ---
 .vscode/
 .idea/
-__marimo__
 
+
+# marimo notebooks
+__marimo__
+notebooks/**/*.html
 
 # --- Build folders ---
 build/
