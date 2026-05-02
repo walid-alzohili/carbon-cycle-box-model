@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .System import P_0
+from .system import P_0
 
 if TYPE_CHECKING:
     import matplotlib.axes
