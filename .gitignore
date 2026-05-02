@@ -37,6 +37,7 @@ wheels/
 __marimo__
 notebooks/**/*.html
 
+
 # --- Build folders ---
 build/
 out/
