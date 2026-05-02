@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "httpx>=0.28.1",
+    "ipykernel>=7.2.0",
+    "marimo>=0.23.4",
     "matplotlib>=3.10.9",
     "numpy>=2.4.4",
     "pandas>=3.0.2",
@@ -40,6 +42,7 @@ dev = [
         "I",    # isort: Sorting your imports automatically.
         "UP",   # pyupgrade: suggestions (keeps your code modern).
         "D",    # pydocstyle: checks that docstring are done correctly.
+        "N",    # pep8-naming: enforce naming conventions
         "ANN",  # Forces you to add type annotations to all functions.
         "NPY",  # Specific rules for NumPy.
         "PD",   # Specific rules for Pandas.
@@ -61,6 +64,15 @@ dev = [
         "D107",
     ]
 
+    [tool.ruff.lint.per-file-ignores]
+    # Ignore somr rule for notebooks.
+    "notebooks/*" = ["ANN", "N", "D100"]
+
     [tool.ruff.format]
     quote-style = "double"
     indent-style = "space"
+
+
+# add project root directory to marimo pthon-path variable so you can import any Python file.
+[tool.marimo.runtime]
+pythonpath = ["."]
