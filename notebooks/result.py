@@ -89,48 +89,39 @@ def _(helper_functions, pd, plt, sol):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # Solve Scenarios
+    # Visualize scenarios
     """)
     return
 
 
 @app.cell
-def _(Scenarios, System, co2_excluding_luc, co2_from_luc):
+def _(Scenarios, co2_excluding_luc, co2_from_luc):
     scenarios = Scenarios(co2_from_luc, co2_excluding_luc).get_all()
-
-    _t_start, _t_end = 1750, 2100
-
-    solutions = [
-        System().solve(
-            _t_start,
-            _t_end,
-            scenario["co2_excluding_luc"].to_numpy(),
-            scenario["co2_from_luc"].to_numpy(),
-        )
-        for scenario in scenarios
-    ]
-    return scenarios, solutions
+    return (scenarios,)
 
 
 @app.cell
-def _(helper_functions, mo, plt, scenarios):
+def _(helper_functions, plt, scenarios):
+    # Pre-compute all figures and store them in a dictionary
     _legend = [r"$\mathrm{CO_2}$ excluding LUC", r"$\mathrm{CO_2}$ from LUC", r"Total $\mathrm{CO_2}$ emission"]
-
-    # 1. Pre-compute all figures and store them in a dictionary
     precomputed_figs = {}
     for i, scenario in enumerate(scenarios, 1):
         _fig, _ax = plt.subplots(figsize=(6, 4))
         name = f"Scenario {i}"
         helper_functions.plot_dataframe(_ax, scenario, name, "Emission (PgC/year)", _legend)
         precomputed_figs[name] = _fig
+    return (precomputed_figs,)
 
-    # 2. Create the dropdown widget
+
+@app.cell
+def _(mo, precomputed_figs):
+    # Create the dropdown widget
     scenario_selector = mo.ui.dropdown(
         options=list(precomputed_figs.keys()),
         value="Scenario 1",
         label="Select a Scenario:",
     )
-    return precomputed_figs, scenario_selector
+    return (scenario_selector,)
 
 
 @app.cell
@@ -145,6 +136,30 @@ def _(mo, precomputed_figs, scenario_selector):
         ]
     )
     return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Solve future CO2 concentrations
+    """)
+    return
+
+
+@app.cell
+def _(System, scenarios):
+    _t_start, _t_end = 1750, 2100
+
+    solutions = [
+        System().solve(
+            _t_start,
+            _t_end,
+            scenario["co2_excluding_luc"].to_numpy(),
+            scenario["co2_from_luc"].to_numpy(),
+        )
+        for scenario in scenarios
+    ]
+    return (solutions,)
 
 
 @app.cell
