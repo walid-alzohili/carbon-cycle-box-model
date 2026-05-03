@@ -98,58 +98,32 @@ def _(mo):
 
 @app.cell
 def _(Scenarios, System, co2_excluding_luc, co2_from_luc):
-    scenario_1, scenario_2, scenario_3, scenario_4, scenario_5 = Scenarios(co2_from_luc, co2_excluding_luc).get_all()
+    scenarios = Scenarios(co2_from_luc, co2_excluding_luc).get_all()
 
-    _t_start = 1750
-    _t_end = 2100
+    _t_start, _t_end = 1750, 2100
 
-    sol_1 = System().solve(
-        _t_start, _t_end, scenario_1["co2_excluding_luc"].to_numpy(), scenario_1["co2_from_luc"].to_numpy()
-    )
-    sol_2 = System().solve(
-        _t_start, _t_end, scenario_2["co2_excluding_luc"].to_numpy(), scenario_2["co2_from_luc"].to_numpy()
-    )
-    sol_3 = System().solve(
-        _t_start, _t_end, scenario_3["co2_excluding_luc"].to_numpy(), scenario_3["co2_from_luc"].to_numpy()
-    )
-    sol_4 = System().solve(
-        _t_start, _t_end, scenario_4["co2_excluding_luc"].to_numpy(), scenario_4["co2_from_luc"].to_numpy()
-    )
-    sol_5 = System().solve(
-        _t_start, _t_end, scenario_5["co2_excluding_luc"].to_numpy(), scenario_5["co2_from_luc"].to_numpy()
-    )
-    return (
-        scenario_1,
-        scenario_2,
-        scenario_3,
-        scenario_4,
-        scenario_5,
-        sol_1,
-        sol_2,
-        sol_3,
-        sol_4,
-        sol_5,
-    )
+    solutions = [
+        System().solve(
+            _t_start,
+            _t_end,
+            scenario["co2_excluding_luc"].to_numpy(),
+            scenario["co2_from_luc"].to_numpy(),
+        )
+        for scenario in scenarios
+    ]
+    return scenarios, solutions
 
 
 @app.cell
-def _(
-    helper_functions,
-    plt,
-    scenario_1,
-    scenario_2,
-    scenario_3,
-    scenario_4,
-    scenario_5,
-):
+def _(helper_functions, plt, scenarios):
     """Plot the emission for first 4 scenarios."""
     fig_emissions_scenarios_1_to_4, axs = plt.subplots(2, 2, figsize=(10, 6))
     legend = [r"$\mathrm{CO_2}$ excluding LUC", r"$\mathrm{CO_2}$ from LUC", r"Total $\mathrm{CO_2}$ emission"]
 
-    helper_functions.plot_dataframe(axs[0, 0], scenario_1, "Scenario 1", "Emission (PgC/year)", legend)
-    helper_functions.plot_dataframe(axs[0, 1], scenario_2, "Scenario 2", "Emission (PgC/year)", legend)
-    helper_functions.plot_dataframe(axs[1, 0], scenario_3, "Scenario 3", "Emission (PgC/year)", legend)
-    helper_functions.plot_dataframe(axs[1, 1], scenario_4, "Scenario 4", "Emission (PgC/year)", legend)
+    helper_functions.plot_dataframe(axs[0, 0], scenarios[0], "Scenario 1", "Emission (PgC/year)", legend)
+    helper_functions.plot_dataframe(axs[0, 1], scenarios[1], "Scenario 2", "Emission (PgC/year)", legend)
+    helper_functions.plot_dataframe(axs[1, 0], scenarios[2], "Scenario 3", "Emission (PgC/year)", legend)
+    helper_functions.plot_dataframe(axs[1, 1], scenarios[3], "Scenario 4", "Emission (PgC/year)", legend)
 
     plt.tight_layout()
     plt.show()
@@ -158,54 +132,40 @@ def _(
     fig_emissions_scenario_5, axs = plt.subplots(figsize=(5, 3))
     axs.set_title(r"Plotting $CO_2$ concentration", fontsize=14)
 
-    helper_functions.plot_dataframe(axs, scenario_5, "Scenario 5", "Emission (PgC/year)", legend)
+    helper_functions.plot_dataframe(axs, scenarios[4], "Scenario 5", "Emission (PgC/year)", legend)
     plt.tight_layout()
     plt.show()
     return fig_emissions_scenario_5, fig_emissions_scenarios_1_to_4
 
 
 @app.cell
-def _(helper_functions, pd, plt, sol_1, sol_2, sol_3, sol_4, sol_5):
+def _(helper_functions, pd, plt, solutions):
     # calculate concentrations.
-    scenario_1_concentration = helper_functions.calculate_co2_concentration(sol_1.y[0])
-    scenario_2_concentration = helper_functions.calculate_co2_concentration(sol_2.y[0])
-    scenario_3_concentration = helper_functions.calculate_co2_concentration(sol_3.y[0])
-    scenario_4_concentration = helper_functions.calculate_co2_concentration(sol_4.y[0])
-    scenario_5_concentration = helper_functions.calculate_co2_concentration(sol_5.y[0])
+    concentrations = [helper_functions.calculate_co2_concentration(sol.y[0]) for sol in solutions]
 
+    # build dataframe for plotting.
+    _df = pd.DataFrame(
+        {
+            "year": range(1750, 2101),
+            **{f"scenario_{i + 1}": conc for i, conc in enumerate(concentrations)},
+        }
+    )
+
+    # plot
     fig_future_concentrations, _ax = plt.subplots(figsize=(6, 4))
     helper_functions.plot_dataframe(
         _ax,
-        pd.DataFrame(
-            {
-                "year": range(1750, 2101),
-                "scenario_1": scenario_1_concentration,
-                "scenario_2": scenario_2_concentration,
-                "scenario_3": scenario_3_concentration,
-                "scenario_4": scenario_4_concentration,
-                "scenario_5": scenario_5_concentration,
-            }
-        ),
+        _df,
         r"Historic and future $\mathrm{CO_2}$ concentrations",
         "Concentration (ppm)",
-        ["Scenario 1", "Scenario 2", "Scenario 3", "Scenario 4", "Scenario 5"],
+        [f"Scenario {i + 1}" for i in range(len(concentrations))],
     )
     plt.show()
 
-    # concentrations at year 2100.
-    print(scenario_1_concentration[-1])
-    print(scenario_2_concentration[-1])
-    print(scenario_3_concentration[-1])
-    print(scenario_4_concentration[-1])
-    print(scenario_5_concentration[-1])
-    return (
-        fig_future_concentrations,
-        scenario_1_concentration,
-        scenario_2_concentration,
-        scenario_3_concentration,
-        scenario_4_concentration,
-        scenario_5_concentration,
-    )
+    # concentrations at year 2100
+    for conc in concentrations:
+        print(conc[-1])
+    return concentrations, fig_future_concentrations
 
 
 @app.cell(hide_code=True)
@@ -247,71 +207,39 @@ def _(concentration, helper_functions, pd, plt):
 
 
 @app.cell
-def _(
-    helper_functions,
-    pd,
-    plt,
-    scenario_1_concentration,
-    scenario_2_concentration,
-    scenario_3_concentration,
-    scenario_4_concentration,
-    scenario_5_concentration,
-):
+def _(concentrations, helper_functions, pd, plt):
     # get the change in temperature for each scenario.
-    delta_t_scenario_1 = helper_functions.calculate_delta_t(scenario_1_concentration)
-    delta_t_scenario_2 = helper_functions.calculate_delta_t(scenario_2_concentration)
-    delta_t_scenario_3 = helper_functions.calculate_delta_t(scenario_3_concentration)
-    delta_t_scenario_4 = helper_functions.calculate_delta_t(scenario_4_concentration)
-    delta_t_scenario_5 = helper_functions.calculate_delta_t(scenario_5_concentration)
+    _delta_t = [helper_functions.calculate_delta_t(conc) for conc in concentrations]
 
-    # plot the change in temperature for each scenario.
+    # build dataframe for visualization
+    df_temp = pd.DataFrame(
+        {
+            "year": range(1750, 2101),
+            **{f"Scenario {i + 1}": dt for i, dt in enumerate(_delta_t)},
+        }
+    )
+
+    # plot
     fig_future_temperature_change, _ax = plt.subplots(figsize=(6, 4))
     helper_functions.plot_dataframe(
         _ax,
-        pd.DataFrame(
-            {
-                "year": range(1750, 2101),
-                "Scenario 1": delta_t_scenario_1,
-                "Scenario 2": delta_t_scenario_2,
-                "Scenario 3": delta_t_scenario_3,
-                "Scenario 4": delta_t_scenario_4,
-                "Scenario 5": delta_t_scenario_5,
-            }
-        ),
-        "Change in termperatures from 1750 to 2100",
+        df_temp,
+        "Change in temperatures from 1750 to 2100",
         "Change in degrees",
     )
     plt.show()
-    return (
-        delta_t_scenario_1,
-        delta_t_scenario_2,
-        delta_t_scenario_3,
-        delta_t_scenario_4,
-        delta_t_scenario_5,
-        fig_future_temperature_change,
-    )
 
-
-@app.cell
-def _(
-    delta_t_scenario_1,
-    delta_t_scenario_2,
-    delta_t_scenario_3,
-    delta_t_scenario_4,
-    delta_t_scenario_5,
-):
-    """
-    Show increase of temperature between 1850 and 2100.
+    print(
+        """
+    Temperature between 1850 and 2100.
 
     This is used to compare the results of the project with the IPCC report which provide the temperature
     change from 1850 to 2100.
     """
-    print(delta_t_scenario_1[-1] - delta_t_scenario_1[100])
-    print(delta_t_scenario_2[-1] - delta_t_scenario_1[100])
-    print(delta_t_scenario_3[-1] - delta_t_scenario_1[100])
-    print(delta_t_scenario_4[-1] - delta_t_scenario_1[100])
-    print(delta_t_scenario_5[-1] - delta_t_scenario_1[100])
-    return
+    )
+    for _dt in _delta_t:
+        print(_dt[-1] - _dt[100])
+    return (fig_future_temperature_change,)
 
 
 @app.cell(hide_code=True)

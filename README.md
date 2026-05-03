@@ -22,7 +22,7 @@ By comparing different emission pathways, this project highlights the direct imp
 ### 1. Setup Environment
 - Clone the repository.
 - Install dependencies using `uv` by running `uv sync`.
-- If using PyCharm, point PyCharm to the local virtual environment, otherwise activate the environment by running `source .venv/bin/activate`.
+- If using PyCharm, point PyCharm to the local virtual environment, then open new terminal windowm, otherwise activate the environment by running `source .venv/bin/activate`.
 - Activate Git hooks: Run `pre-commit install`.
 - Install the assets:
     - Run the script `./setup_remote_files.py`, this downloades a zip file with the
