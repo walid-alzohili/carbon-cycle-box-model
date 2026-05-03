@@ -6,8 +6,6 @@ app = marimo.App(width="columns")
 
 @app.cell
 def _():
-    from pathlib import Path
-
     import marimo as mo
     import matplotlib.pyplot as plt
     import pandas as pd
@@ -16,7 +14,7 @@ def _():
     from src.scenarios import Scenarios
     from src.system import System
 
-    return Path, Scenarios, System, helper_functions, mo, pd, plt
+    return Scenarios, System, helper_functions, mo, pd, plt
 
 
 @app.cell
@@ -61,7 +59,7 @@ def _(System, co2_excluding_luc, co2_from_luc, df, helper_functions, plt):
         [r"$\mathrm{CO_2}$ excluding LUC", r"$\mathrm{CO_2}$ from LUC", r"Total $\mathrm{CO_2}$ emission"],
     )
     plt.show()
-    return fig_historic_emissions, sol
+    return (sol,)
 
 
 @app.cell
@@ -85,7 +83,7 @@ def _(helper_functions, pd, plt, sol):
     dioxide#:~:text=The%20global%20average%20carbon%20dioxide,in%20the%2063%2Dyear%20record.
     """
     print(sol.y[0][-1] / 2.13, sol.t[-1])
-    return concentration, fig_historic_concentrations
+    return (concentration,)
 
 
 @app.cell(hide_code=True)
@@ -115,27 +113,38 @@ def _(Scenarios, System, co2_excluding_luc, co2_from_luc):
 
 
 @app.cell
-def _(helper_functions, plt, scenarios):
-    """Plot the emission for first 4 scenarios."""
-    fig_emissions_scenarios_1_to_4, axs = plt.subplots(2, 2, figsize=(10, 6))
-    legend = [r"$\mathrm{CO_2}$ excluding LUC", r"$\mathrm{CO_2}$ from LUC", r"Total $\mathrm{CO_2}$ emission"]
+def _(helper_functions, mo, plt, scenarios):
+    _legend = [r"$\mathrm{CO_2}$ excluding LUC", r"$\mathrm{CO_2}$ from LUC", r"Total $\mathrm{CO_2}$ emission"]
 
-    helper_functions.plot_dataframe(axs[0, 0], scenarios[0], "Scenario 1", "Emission (PgC/year)", legend)
-    helper_functions.plot_dataframe(axs[0, 1], scenarios[1], "Scenario 2", "Emission (PgC/year)", legend)
-    helper_functions.plot_dataframe(axs[1, 0], scenarios[2], "Scenario 3", "Emission (PgC/year)", legend)
-    helper_functions.plot_dataframe(axs[1, 1], scenarios[3], "Scenario 4", "Emission (PgC/year)", legend)
+    # 1. Pre-compute all figures and store them in a dictionary
+    precomputed_figs = {}
+    for i, scenario in enumerate(scenarios, 1):
+        _fig, _ax = plt.subplots(figsize=(6, 4))
+        name = f"Scenario {i}"
+        helper_functions.plot_dataframe(_ax, scenario, name, "Emission (PgC/year)", _legend)
+        precomputed_figs[name] = _fig
 
-    plt.tight_layout()
-    plt.show()
+    # 2. Create the dropdown widget
+    scenario_selector = mo.ui.dropdown(
+        options=list(precomputed_figs.keys()),
+        value="Scenario 1",
+        label="Select a Scenario:",
+    )
+    return precomputed_figs, scenario_selector
 
-    """plot the emission for fifth scenario."""
-    fig_emissions_scenario_5, axs = plt.subplots(figsize=(5, 3))
-    axs.set_title(r"Plotting $CO_2$ concentration", fontsize=14)
 
-    helper_functions.plot_dataframe(axs, scenarios[4], "Scenario 5", "Emission (PgC/year)", legend)
-    plt.tight_layout()
-    plt.show()
-    return fig_emissions_scenario_5, fig_emissions_scenarios_1_to_4
+@app.cell
+def _(mo, precomputed_figs, scenario_selector):
+    # This cell re-runs on dropdown change, but dictionary lookup is instant!
+    selected_figure = precomputed_figs[scenario_selector.value]
+
+    mo.vstack(
+        [
+            scenario_selector,
+            selected_figure,
+        ]
+    )
+    return
 
 
 @app.cell
@@ -165,7 +174,7 @@ def _(helper_functions, pd, plt, solutions):
     # concentrations at year 2100
     for conc in concentrations:
         print(conc[-1])
-    return concentrations, fig_future_concentrations
+    return (concentrations,)
 
 
 @app.cell(hide_code=True)
@@ -203,7 +212,7 @@ def _(concentration, helper_functions, pd, plt):
     see: https://www.ipcc.ch/report/ar6/syr/downloads/report/IPCC_AR6_SYR_LongerReport.pdf
     """
     print(delta_t[-1] - delta_t_1850)
-    return (fig_historic_temperature_change,)
+    return
 
 
 @app.cell
@@ -239,38 +248,6 @@ def _(concentrations, helper_functions, pd, plt):
     )
     for _dt in _delta_t:
         print(_dt[-1] - _dt[100])
-    return (fig_future_temperature_change,)
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    # save figs
-    """)
-    return
-
-
-@app.cell
-def _(
-    Path,
-    fig_emissions_scenario_5,
-    fig_emissions_scenarios_1_to_4,
-    fig_future_concentrations,
-    fig_future_temperature_change,
-    fig_historic_concentrations,
-    fig_historic_emissions,
-    fig_historic_temperature_change,
-):
-    # Create the directory if it doesn't exist
-    Path("out/images").mkdir(parents=True, exist_ok=True)
-
-    fig_historic_emissions.savefig("out/images/historic_emissions.pdf")
-    fig_historic_concentrations.savefig("out/images/historic_concentrations.pdf")
-    fig_emissions_scenarios_1_to_4.savefig("out/images/emissions_scenarios_1_to_4.pdf")
-    fig_emissions_scenario_5.savefig("out/images/emissions_scenario_5.pdf")
-    fig_future_concentrations.savefig("out/images/future_concentrations.pdf")
-    fig_historic_temperature_change.savefig("out/images/temperature_change.pdf")
-    fig_future_temperature_change.savefig("out/images/future_temperature_change.pdf")
     return
 
 
